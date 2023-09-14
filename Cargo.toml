@@ -1,0 +1,11 @@
+[package]
+name = "ubook"
+authors = ["周上行Ryer <melaiiryer@gmail.com>"]
+description = "A general online novel management tool."
+version = "0.1.0"
+edition = "2021"
+readme = "README.md"
+homepage = "https://github.com/zymelaii/ubbok-rs"
+repository = "https://github.com/zymelaii/ubbok-rs"
+
+[dependencies]
