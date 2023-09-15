@@ -1,5 +1,4 @@
-use super::types;
-use crate::share::*;
+use super::*;
 
 impl From<types::UserPrivate> for UserInfo {
     fn from(value: types::UserPrivate) -> Self {

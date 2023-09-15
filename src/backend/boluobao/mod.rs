@@ -1,11 +1,13 @@
 mod adapter;
-mod auth;
-pub mod internal;
+mod api;
+mod internal;
 pub mod types;
 
 pub use adapter::*;
-pub use auth::*;
+pub use api::*;
+pub use internal::*;
 
+use crate::share::*;
 use reqwest::{
     blocking::{Client, RequestBuilder},
     header::{HeaderMap, *},
@@ -14,9 +16,6 @@ use reqwest::{
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
-
-use self::internal::{consts, get_sfsecurity};
-use crate::share::Id;
 
 #[derive(Debug, Serialize, Deserialize)]
 #[allow(non_snake_case)]
