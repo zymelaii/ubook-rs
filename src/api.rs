@@ -1,16 +1,19 @@
 use super::share::*;
 
 pub trait AuthAPI {
+    /// 验证账户身份
+    fn try_auth(&mut self, account: &str, password: &str) -> crate::Result<String>;
+
     /// 获取当前身份验证状态
-    fn query_auth_status() -> crate::Result<()>;
+    fn query_auth_status(&mut self, user_id: Id) -> crate::Result<()>;
 
     /// 登录账户
-    fn try_login(&self, account: &str, password: &str) -> crate::Result<Id>;
+    fn try_login(&mut self, account: &str, password: &str) -> crate::Result<Id>;
 
     /// `需要登陆` 注销活动账户
     ///
     /// 仅退出当前账户并结束会话，注销之后必须重新登陆账户
-    fn try_logout(&self, user_id: Id) -> crate::Result<()>;
+    fn try_logout(&mut self, user_id: Id) -> crate::Result<()>;
 }
 
 pub trait UserAPI {

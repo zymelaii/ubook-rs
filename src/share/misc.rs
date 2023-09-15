@@ -23,7 +23,7 @@ pub struct WorkRef {
 }
 
 /// 价格信息
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct PriceInfo {
     /// 是否免费
     pub is_free: bool,
@@ -34,7 +34,7 @@ pub struct PriceInfo {
 }
 
 /// 作品浏览信息
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct BrowseInfo {
     /// 总浏览量
     pub total_views: usize,
@@ -49,7 +49,7 @@ pub struct BrowseInfo {
 }
 
 /// 签约信息
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct SignInfo {
     /// 是否签约
     pub is_signed: String,

@@ -1,7 +1,7 @@
 use super::*;
 
 /// 用户私人信息
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct UserInfoPrivate {
     /// 内部用户标识符
     pub internal_id: String,
@@ -16,10 +16,10 @@ pub struct UserInfoPrivate {
 }
 
 /// 用户信息
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct UserInfo {
     /// 用户 ID
-    pub uid: Id,
+    pub user_id: Id,
     /// 用户昵称
     pub nickname: String,
     /// 个人简介

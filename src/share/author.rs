@@ -1,7 +1,7 @@
 use super::*;
 
 /// 作者信息
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct AuthorInfo {
     /// 作者 ID
     pub author_id: Id,

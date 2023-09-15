@@ -1,7 +1,7 @@
 use super::*;
 
 /// 小说章节信息
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct ChapterInfo {
     /// 小说 ID
     pub novel_id: Id,
@@ -26,7 +26,7 @@ pub struct ChapterInfo {
 }
 
 /// 小说分卷信息
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct VolumeInfo {
     /// 小说 ID
     pub novel_id: Id,
@@ -41,7 +41,7 @@ pub struct VolumeInfo {
 }
 
 /// 小说信息
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct NovelInfo {
     /// 小说 ID
     pub novel_id: Id,

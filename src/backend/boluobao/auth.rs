@@ -1,115 +1,112 @@
-use super::{
-    internal::{consts, get_sfsecurity},
-    BoluobaoHost,
-};
+use super::{BoluobaoHost, Response, SessionInfo};
 use crate::share::*;
-use reqwest::{blocking::Client, header::*, StatusCode};
+use reqwest::{header::*, StatusCode};
 use serde_json::json;
 
 impl crate::api::AuthAPI for BoluobaoHost {
-    fn query_auth_status() -> crate::Result<()> {
-        todo!()
-    }
-
-    fn try_login(&self, account: &str, password: &str) -> crate::Result<crate::share::Id> {
+    fn try_auth(&mut self, account: &str, password: &str) -> crate::Result<String> {
         let secrets = json!({
             "username": account,
             "password": password,
         });
 
-        let device_token = uuid::Uuid::new_v4().to_string().to_lowercase();
-        let app_version = "4.8.42(android;25)";
-        let user_agent = format!("boluobao/{}/{}/{}", app_version, "HomePage", device_token);
-        let security = get_sfsecurity(app_version, device_token.as_str());
-
-        let client = Client::new();
-        let resp = client
-            .post(format!("{}/sessions", consts::APIPREFIX))
-            .header(ACCEPT, "application/vnd.sfacg.api+json;version=1")
-            .header(ACCEPT_CHARSET, "UTF-8")
-            .header(AUTHORIZATION, consts::AUTH)
-            .header(CONTENT_TYPE, "application/json")
-            .header(USER_AGENT, &user_agent)
-            .header("SFSecurity", &security)
+        let resp = self
+            .as_guest()
+            .api_post("/sessions")
             .body(secrets.to_string())
             .send()?;
 
         let status_code = resp.status();
-        let cookies = resp
-            .headers()
-            .get_all(SET_COOKIE)
-            .iter()
-            .map(|e| {
-                let raw = e.to_str().unwrap().to_string();
-                let (k, v) = raw
-                    .split_once("; ")
-                    .unwrap_or(("=", ""))
-                    .0
-                    .split_once("=")
-                    .unwrap();
-                (k.to_string(), v.to_string())
-            })
-            .collect::<Vec<(String, String)>>();
-        let data = resp.text()?.parse::<serde_json::Value>()?;
-
-        let tmp = serde_json::Value::default();
-        let msg = data
-            .get("status")
-            .unwrap_or(&tmp)
-            .get("msg")
-            .unwrap_or(&tmp)
-            .as_str()
-            .unwrap_or("")
-            .to_string();
-
         match status_code {
             StatusCode::OK => (),
-            StatusCode::UNAUTHORIZED | StatusCode::BAD_REQUEST => anyhow::bail!(msg),
+            StatusCode::UNAUTHORIZED | StatusCode::BAD_REQUEST => {
+                let data = serde_json::from_str::<Response<()>>(resp.text()?.as_str());
+                anyhow::bail!(data
+                    .unwrap()
+                    .status
+                    .msg
+                    .unwrap_or(status_code.as_str().to_string()))
+            }
+            StatusCode::INTERNAL_SERVER_ERROR => {
+                anyhow::bail!(status_code.as_str().to_string())
+            }
             _ => unreachable!(),
         };
 
-        let cookie = cookies
-            .iter()
-            .map(|e| format!("{}={}", e.0, e.1))
+        let auth_cookies = [".SFCommunity", "session_APP"];
+        let cookies = resp
+            .cookies()
+            .into_iter()
+            .filter_map(|cookie| {
+                if auth_cookies.contains(&cookie.name()) {
+                    Some(format!("{}={}", cookie.name(), cookie.value()))
+                } else {
+                    None
+                }
+            })
             .collect::<Vec<String>>()
             .join("; ");
 
-        let resp = client
-            .get(format!("{}/user", consts::APIPREFIX))
-            .header(ACCEPT, "application/vnd.sfacg.api+json;version=1")
-            .header(ACCEPT_CHARSET, "UTF-8")
-            .header(AUTHORIZATION, consts::AUTH)
-            .header(CONTENT_TYPE, "application/json")
-            .header(USER_AGENT, &user_agent)
-            .header("SFSecurity", &security)
+        Ok(cookies)
+    }
+
+    fn query_auth_status(&mut self, user_id: Id) -> crate::Result<()> {
+        if let Some(host) = self.as_auth(user_id) {
+            let resp = host.api_get("/user").send()?;
+            if resp.status() == StatusCode::OK {
+                Ok(())
+            } else {
+                anyhow::bail!("expired session")
+            }
+        } else {
+            anyhow::bail!("unauthorized user")
+        }
+    }
+
+    fn try_login(&mut self, account: &str, password: &str) -> crate::Result<Id> {
+        let cookie = self.try_auth(account, password)?;
+        let resp = self
+            .as_guest()
+            .api_get("/user")
             .header(COOKIE, &cookie)
             .send()?;
 
         let status_code = resp.status();
-        let data = resp.text()?.parse::<serde_json::Value>()?;
-
-        let tmp = serde_json::Value::default();
-        let msg = data
-            .get("status")
-            .unwrap_or(&tmp)
-            .get("msg")
-            .unwrap_or(&tmp)
-            .as_str()
-            .unwrap_or("")
-            .to_string();
+        let data =
+            serde_json::from_str::<Response<super::types::UserPrivate>>(resp.text()?.as_str());
 
         match status_code {
             StatusCode::OK => (),
-            StatusCode::UNAUTHORIZED | StatusCode::BAD_REQUEST => anyhow::bail!(msg),
+            StatusCode::UNAUTHORIZED | StatusCode::BAD_REQUEST => {
+                anyhow::bail!(data
+                    .unwrap()
+                    .status
+                    .msg
+                    .unwrap_or(status_code.as_str().to_string()))
+            }
+            StatusCode::INTERNAL_SERVER_ERROR => {
+                anyhow::bail!(status_code.as_str().to_string())
+            }
             _ => unreachable!(),
         };
 
-        let data = data.get("data").unwrap();
-        Ok(data.get("accountId").unwrap().as_i64().unwrap() as Id)
+        let user_id = UserInfo::from(data?.data.unwrap()).user_id;
+        let mut session = SessionInfo::default();
+        cookie.split("; ").for_each(|item| {
+            let (key, value) = item.split_once("=").unwrap();
+            match key {
+                ".SFCommunity" => session.token = value.to_string(),
+                "session_APP" => session.sid = value.to_string(),
+                _ => (),
+            }
+        });
+        self.update_auth(user_id, session);
+
+        Ok(user_id)
     }
 
-    fn try_logout(&self, user_id: crate::share::Id) -> crate::Result<()> {
-        let _ = user_id;
-        todo!()
+    fn try_logout(&mut self, user_id: Id) -> crate::Result<()> {
+        self.remove_auth(user_id);
+        Ok(())
     }
 }
