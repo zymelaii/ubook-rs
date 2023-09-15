@@ -49,6 +49,15 @@ pub fn get_cli_parser() -> Command {
         .arg(arg!([EXPAND]))
         .arg(arg!(--params <PARAMS>));
 
+    let api = Command::new("api")
+        .about("Make an API request of the active backend")
+        .arg_required_else_help(true)
+        .arg(arg!(<METHOD> "Request method to use"))
+        .arg(arg!(<URL> "API url"))
+        .arg(arg!(--params -p <PARAMS> "Params for GET request"))
+        .arg(arg!(--data -d <DATA> "Data for POST request"))
+        .arg(arg!(--cookies -c <COOKIES> "Cookies to use"));
+
     Command::new(env!("CARGO_PKG_NAME"))
         .about(env!("CARGO_PKG_DESCRIPTION"))
         .version(env!("CARGO_PKG_VERSION"))
@@ -57,4 +66,5 @@ pub fn get_cli_parser() -> Command {
         .arg_required_else_help(true)
         .subcommand(auth)
         .subcommand(query)
+        .subcommand(api)
 }
