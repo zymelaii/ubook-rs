@@ -15,23 +15,6 @@ impl crate::api::AuthAPI for BoluobaoHost {
             .body(secrets.to_string())
             .send()?;
 
-        let status_code = resp.status();
-        match status_code {
-            StatusCode::OK => (),
-            StatusCode::UNAUTHORIZED | StatusCode::BAD_REQUEST => {
-                let data = serde_json::from_str::<Response<()>>(resp.text()?.as_str());
-                anyhow::bail!(data
-                    .unwrap()
-                    .status
-                    .msg
-                    .unwrap_or(status_code.as_str().to_string()))
-            }
-            StatusCode::INTERNAL_SERVER_ERROR => {
-                anyhow::bail!(status_code.as_str().to_string())
-            }
-            _ => unreachable!(),
-        };
-
         let auth_cookies = [".SFCommunity", "session_APP"];
         let cookies = resp
             .cookies()
@@ -45,6 +28,8 @@ impl crate::api::AuthAPI for BoluobaoHost {
             })
             .collect::<Vec<String>>()
             .join("; ");
+
+        process_response::<()>(resp.status(), resp.text()?.as_str())?;
 
         Ok(cookies)
     }
@@ -70,26 +55,10 @@ impl crate::api::AuthAPI for BoluobaoHost {
             .header(COOKIE, &cookie)
             .send()?;
 
-        let status_code = resp.status();
-        let data =
-            serde_json::from_str::<Response<super::types::UserPrivate>>(resp.text()?.as_str());
+        let data: types::UserPrivate =
+            process_response(resp.status(), resp.text()?.as_str())?.unwrap();
+        let user_id = UserInfo::from(data).user_id;
 
-        match status_code {
-            StatusCode::OK => (),
-            StatusCode::UNAUTHORIZED | StatusCode::BAD_REQUEST => {
-                anyhow::bail!(data
-                    .unwrap()
-                    .status
-                    .msg
-                    .unwrap_or(status_code.as_str().to_string()))
-            }
-            StatusCode::INTERNAL_SERVER_ERROR => {
-                anyhow::bail!(status_code.as_str().to_string())
-            }
-            _ => unreachable!(),
-        };
-
-        let user_id = UserInfo::from(data?.data.unwrap()).user_id;
         let mut session = SessionInfo::default();
         cookie.split("; ").for_each(|item| {
             let (key, value) = item.split_once("=").unwrap();

@@ -11,7 +11,7 @@ use crate::share::*;
 use reqwest::{
     blocking::{Client, RequestBuilder},
     header::{HeaderMap, *},
-    IntoUrl, Method,
+    IntoUrl, Method, StatusCode,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -120,5 +120,31 @@ impl BoluobaoHost {
 
     pub fn api_post(&self, url: &str) -> RequestBuilder {
         self.request(Method::POST, format!("{}{}", consts::APIPREFIX, url))
+    }
+}
+
+pub fn process_response<'a, T>(
+    status_code: StatusCode,
+    raw_text: &'a str,
+) -> crate::Result<Option<T>>
+where
+    T: Deserialize<'a>,
+{
+    let resp_opt = serde_json::from_str::<Response<T>>(raw_text);
+    match status_code {
+        StatusCode::OK => Ok(resp_opt.unwrap().data),
+        StatusCode::UNAUTHORIZED | StatusCode::BAD_REQUEST => {
+            let msg = resp_opt
+                .unwrap()
+                .status
+                .msg
+                .unwrap_or(status_code.as_str().to_string());
+            anyhow::bail!("{} => {}", status_code, msg)
+        }
+        StatusCode::INTERNAL_SERVER_ERROR => {
+            let err = serde_json::from_str::<InternalError>(raw_text).unwrap();
+            anyhow::bail!("{} => {}", status_code, err.ExceptionMessage);
+        }
+        _ => anyhow::bail!("{}", status_code),
     }
 }
