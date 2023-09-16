@@ -18,13 +18,8 @@ impl crate::api::AuthAPI for BoluobaoHost {
         let auth_cookies = [".SFCommunity", "session_APP"];
         let cookies = resp
             .cookies()
-            .filter_map(|cookie| {
-                if auth_cookies.contains(&cookie.name()) {
-                    Some(format!("{}={}", cookie.name(), cookie.value()))
-                } else {
-                    None
-                }
-            })
+            .filter(|cookie| auth_cookies.contains(&cookie.name()))
+            .map(|cookie| format!("{}={}", cookie.name(), cookie.value()))
             .collect::<Vec<String>>()
             .join("; ");
 
@@ -54,13 +49,13 @@ impl crate::api::AuthAPI for BoluobaoHost {
             .header(COOKIE, &cookie)
             .send()?;
 
-        let data: types::UserPrivate =
-            process_response(resp.status(), resp.text()?.as_str())?.unwrap();
+        let data: types::UserPrivate = process_response(resp.status(), resp.text()?.as_str())?
+            .expect("missing expected field");
         let user_id = UserInfo::from(data).user_id;
 
         let mut session = SessionInfo::default();
         cookie.split("; ").for_each(|item| {
-            let (key, value) = item.split_once('=').unwrap();
+            let (key, value) = item.split_once('=').expect("invalid set-cookie header");
             match key {
                 ".SFCommunity" => session.token = value.to_string(),
                 "session_APP" => session.sid = value.to_string(),

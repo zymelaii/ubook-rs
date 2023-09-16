@@ -3,30 +3,32 @@ use super::*;
 impl crate::api::NovelAPI for BoluobaoHost {
     fn query_novel_info(&mut self, novel_id: Id) -> crate::Result<NovelInfo> {
         #[derive(Deserialize)]
-        #[allow(non_snake_case, dead_code)]
+        #[allow(dead_code)]
+        #[serde(rename_all = "camelCase")]
         struct ResponseData {
-            needPoint: usize,
+            need_point: usize,
             point: usize,
             rank: i32,
         }
 
         let resp = self
             .as_guest()
-            .api_get(&format!("/novels/{}", novel_id))
+            .api_get(&format!("/novels/{novel_id}"))
             .query(&[("expand", "typeName,intro,fav,ticket,signLevel")])
             .send()?;
 
-        let data: types::Novel = process_response(resp.status(), &resp.text()?)?.unwrap();
+        let data: types::Novel =
+            process_response(resp.status(), &resp.text()?)?.expect("missing expected field");
         let mut novel_info = NovelInfo::from(data);
 
         let resp = self
-            .api_get(&format!("/novels/{}/bonus/rank", novel_id))
+            .api_get(&format!("/novels/{novel_id}/bonus/rank"))
             .query(&[("numMax", "1"), ("dateRange", "1")])
             .send()?;
 
         novel_info.browse_info.total_rewards =
             process_response::<ResponseData>(resp.status(), &resp.text()?)?
-                .unwrap()
+                .expect("missing expected field")
                 .point;
 
         // TODO: API to get the total favorites of the novel
@@ -34,11 +36,11 @@ impl crate::api::NovelAPI for BoluobaoHost {
 
         let resp = self
             .as_guest()
-            .api_get(&format!("/novels/{}/volumes", novel_id))
+            .api_get(&format!("/novels/{novel_id}/volumes"))
             .send()?;
 
-        let data =
-            process_response::<Vec<types::VolumeInfoV2>>(resp.status(), &resp.text()?)?.unwrap();
+        let data = process_response::<Vec<types::VolumeInfoV2>>(resp.status(), &resp.text()?)?
+            .expect("missing expected field");
         novel_info.volumes = data.iter().map(|e| e.volume_id).collect();
 
         Ok(novel_info)
@@ -47,18 +49,20 @@ impl crate::api::NovelAPI for BoluobaoHost {
     fn query_volume_info(&mut self, volume_id: Id) -> crate::Result<VolumeInfo> {
         let resp = self
             .as_guest()
-            .api_get(&format!("/volumes/{}", volume_id))
+            .api_get(&format!("/volumes/{volume_id}"))
             .send()?;
 
-        let data: types::VolumeInfoV2 = process_response(resp.status(), &resp.text()?)?.unwrap();
+        let data: types::VolumeInfoV2 =
+            process_response(resp.status(), &resp.text()?)?.expect("missing expected field");
         let mut volume_info: VolumeInfo = data.into();
 
         let resp = self
             .as_guest()
-            .api_get(&format!("/volumes/{}/chaps", volume_id))
+            .api_get(&format!("/volumes/{volume_id}/chaps"))
             .send()?;
 
-        let data: Vec<types::Chapter> = process_response(resp.status(), &resp.text()?)?.unwrap();
+        let data: Vec<types::Chapter> =
+            process_response(resp.status(), &resp.text()?)?.expect("missing expected field");
         let data = data.iter().map(|e| e.chap_id).collect();
 
         // TODO: API to get the novel id of volume
@@ -71,11 +75,12 @@ impl crate::api::NovelAPI for BoluobaoHost {
     fn query_chapter_info(&mut self, chapter_id: Id) -> crate::Result<ChapterInfo> {
         let resp = self
             .as_guest()
-            .api_get(&format!("/chaps/{}", chapter_id))
+            .api_get(&format!("/chaps/{chapter_id}"))
             .query(&[("expand", "needFireMoney,originNeedFireMoney")])
             .send()?;
 
-        let data: types::Chapter = process_response(resp.status(), &resp.text()?)?.unwrap();
+        let data: types::Chapter =
+            process_response(resp.status(), &resp.text()?)?.expect("missing expected field");
 
         Ok(data.into())
     }
@@ -96,13 +101,14 @@ impl crate::api::NovelAPI for BoluobaoHost {
         };
 
         let resp = host
-            .api_get(&format!("/chaps/{}", chapter_id))
+            .api_get(&format!("/chaps/{chapter_id}"))
             .query(&[("expand", "content")])
             .send()?;
 
-        let data: types::Chapter = process_response(resp.status(), &resp.text()?)?.unwrap();
+        let data: types::Chapter =
+            process_response(resp.status(), &resp.text()?)?.expect("missing expected field");
 
-        if let Some(content) = data.expand.unwrap().content {
+        if let Some(content) = data.expand.expect("missing `expand` field").content {
             Ok(content)
         } else {
             anyhow::bail!("failed to get chapter content")

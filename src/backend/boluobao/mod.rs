@@ -78,10 +78,9 @@ impl BoluobaoHost {
 
     fn default_header(&self) -> crate::Result<HeaderMap> {
         let app_version = "4.8.42(android;25)";
-        let user_agent = format!(
-            "boluobao/{}/{}/{}",
-            app_version, "HomePage", self.device_token
-        );
+        let channel = "HomePage";
+
+        let user_agent = format!("boluobao/{app_version}/{channel}/{}", self.device_token);
         let security = get_sfsecurity(app_version, self.device_token.as_str());
 
         let mut headers = HeaderMap::new();
@@ -101,11 +100,9 @@ impl BoluobaoHost {
             .request(method, url)
             .headers(self.default_header().unwrap_or_default());
         if let Some(user_id) = self.active_user {
-            let session = self.sessions.get(&user_id).unwrap();
-            let cookie = format!(
-                ".SFCommunity={}; session_APP={}",
-                session.token, session.sid
-            );
+            let SessionInfo { token, sid } =
+                self.sessions.get(&user_id).expect("broken session list");
+            let cookie = format!(".SFCommunity={token}; session_APP={sid}");
             request.header(COOKIE, cookie)
         } else {
             request
@@ -121,11 +118,11 @@ impl BoluobaoHost {
     }
 
     pub fn api_get(&self, url: &str) -> RequestBuilder {
-        self.request(Method::GET, format!("{}{}", consts::APIPREFIX, url))
+        self.request(Method::GET, format!("{}{url}", consts::APIPREFIX))
     }
 
     pub fn api_post(&self, url: &str) -> RequestBuilder {
-        self.request(Method::POST, format!("{}{}", consts::APIPREFIX, url))
+        self.request(Method::POST, format!("{}{url}", consts::APIPREFIX))
     }
 }
 
@@ -138,19 +135,21 @@ where
 {
     let resp_opt = serde_json::from_str::<Response<T>>(raw_text);
     match status_code {
-        StatusCode::OK => Ok(resp_opt.unwrap().data),
+        StatusCode::OK => Ok(resp_opt.expect("illegal response").data),
         StatusCode::UNAUTHORIZED | StatusCode::BAD_REQUEST => {
             let msg = resp_opt
-                .unwrap()
+                .expect("illegal response")
                 .status
                 .msg
                 .unwrap_or(status_code.as_str().to_string());
-            anyhow::bail!("{} => {}", status_code, msg)
+            anyhow::bail!("{status_code} => {msg}")
         }
         StatusCode::INTERNAL_SERVER_ERROR => {
-            let err = serde_json::from_str::<InternalError>(raw_text).unwrap();
-            anyhow::bail!("{} => {}", status_code, err.ExceptionMessage);
+            let msg = serde_json::from_str::<InternalError>(raw_text)
+                .expect("illegal response")
+                .ExceptionMessage;
+            anyhow::bail!("{status_code} => {msg}");
         }
-        _ => anyhow::bail!("{}", status_code),
+        _ => anyhow::bail!("{status_code}"),
     }
 }

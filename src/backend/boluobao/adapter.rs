@@ -59,7 +59,7 @@ impl From<types::Novel> for NovelInfo {
         }
 
         let mut novel_info = Self {
-            novel_id: value.novel_id.unwrap(),
+            novel_id: value.novel_id.expect("missing field `novel_id`"),
             author_id: value.author_id,
             name: value.novel_name,
             author: value.author_name,
@@ -128,7 +128,7 @@ impl From<types::Chapter> for ChapterInfo {
             volume_id: value.volume_id,
             chapter_id: value.chap_id,
             title: value.title,
-            order: value.chap_order.try_into().unwrap(),
+            order: value.chap_order.try_into().expect("invalid `chap_order`"),
             total_words: value.char_count,
             pub_date,
             rev_date: value

@@ -10,7 +10,9 @@ pub fn get_sfsecurity(app_version: &str, device_token: &str) -> String {
     let nonce = Uuid::new_v4().to_string().to_uppercase();
     let timestamp = Timestamp::now().count();
     let device_token = device_token.to_uppercase();
-    let appkey = consts::APPKEYS.get(app_version).unwrap();
+    let appkey = consts::APPKEYS
+        .get(app_version)
+        .expect("unsupported app version for boluobao backend");
 
     let source = format!("{nonce}{timestamp}{device_token}{appkey}");
     let mut digest = Md5::new();
