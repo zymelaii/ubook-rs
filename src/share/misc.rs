@@ -52,7 +52,7 @@ pub struct BrowseInfo {
 #[derive(Debug, Default)]
 pub struct SignInfo {
     /// 是否签约
-    pub is_signed: String,
+    pub is_signed: bool,
     /// 签约等级
     pub level: usize,
     /// 附加信息
