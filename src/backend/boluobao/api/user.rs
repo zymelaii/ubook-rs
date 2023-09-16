@@ -21,7 +21,7 @@ impl crate::api::UserAPI for BoluobaoHost {
         let basic_user_info = self.query_user_info(user_id)?;
 
         if let Some(host) = self.as_auth(user_id) {
-            let resp = host.api_get(&format!("/user")).send()?;
+            let resp = host.api_get("/user").send()?;
 
             let data: types::User = process_response(resp.status(), &resp.text()?)?.unwrap();
             let user_info = UserInfo::from(data);

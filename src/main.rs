@@ -29,8 +29,8 @@ fn handle_api_subcmd(matches: &ArgMatches) -> ubook::Result<()> {
     if let Some(params) = matches.get_one::<String>("params") {
         request = request.query(
             &params
-                .split("&")
-                .map(|pair| pair.split_once("=").unwrap())
+                .split('&')
+                .map(|pair| pair.split_once('=').unwrap())
                 .collect::<Vec<(&str, &str)>>(),
         )
     };

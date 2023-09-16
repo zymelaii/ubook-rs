@@ -33,12 +33,7 @@ pub struct BoluobaoHost {
 
 impl BoluobaoHost {
     pub fn new() -> Self {
-        Self {
-            client: Default::default(),
-            device_token: Uuid::new_v4().to_string().to_lowercase(),
-            active_user: None,
-            sessions: Default::default(),
-        }
+        Self::default()
     }
 
     pub fn update_auth(&mut self, user_id: Id, session: SessionInfo) {
@@ -51,6 +46,17 @@ impl BoluobaoHost {
             if uid == user_id {
                 self.active_user = None;
             }
+        }
+    }
+}
+
+impl Default for BoluobaoHost {
+    fn default() -> Self {
+        Self {
+            client: Default::default(),
+            device_token: Uuid::new_v4().to_string().to_lowercase(),
+            active_user: None,
+            sessions: Default::default(),
         }
     }
 }
@@ -93,7 +99,7 @@ impl BoluobaoHost {
         let request = self
             .client
             .request(method, url)
-            .headers(self.default_header().unwrap_or(HeaderMap::default()));
+            .headers(self.default_header().unwrap_or_default());
         if let Some(user_id) = self.active_user {
             let session = self.sessions.get(&user_id).unwrap();
             let cookie = format!(

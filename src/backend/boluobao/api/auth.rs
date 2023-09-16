@@ -18,7 +18,6 @@ impl crate::api::AuthAPI for BoluobaoHost {
         let auth_cookies = [".SFCommunity", "session_APP"];
         let cookies = resp
             .cookies()
-            .into_iter()
             .filter_map(|cookie| {
                 if auth_cookies.contains(&cookie.name()) {
                     Some(format!("{}={}", cookie.name(), cookie.value()))
@@ -61,7 +60,7 @@ impl crate::api::AuthAPI for BoluobaoHost {
 
         let mut session = SessionInfo::default();
         cookie.split("; ").for_each(|item| {
-            let (key, value) = item.split_once("=").unwrap();
+            let (key, value) = item.split_once('=').unwrap();
             match key {
                 ".SFCommunity" => session.token = value.to_string(),
                 "session_APP" => session.sid = value.to_string(),

@@ -130,7 +130,7 @@ impl From<types::Chapter> for ChapterInfo {
             title: value.title,
             order: value.chapOrder.try_into().unwrap(),
             total_words: value.charCount,
-            pub_date: pub_date,
+            pub_date,
             rev_date: value
                 .updateTime
                 .and_then(|time| to_timestamp(&time).ok())
