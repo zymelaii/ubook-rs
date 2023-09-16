@@ -1,4 +1,4 @@
-use clap::{arg, Command};
+use clap::{arg, ArgAction, Command};
 
 pub fn get_cli_parser() -> Command {
     let auth = Command::new("auth")
@@ -56,7 +56,8 @@ pub fn get_cli_parser() -> Command {
         .arg(arg!(<URL> "API url"))
         .arg(arg!(--params -p <PARAMS> "Params for GET request"))
         .arg(arg!(--data -d <DATA> "Data for POST request"))
-        .arg(arg!(--cookies -c <COOKIES> "Cookies to use"));
+        .arg(arg!(--cookies -c <COOKIES> "Cookies to use"))
+        .arg(arg!(--head -I "Show document info only").action(ArgAction::SetTrue));
 
     Command::new(env!("CARGO_PKG_NAME"))
         .about(env!("CARGO_PKG_DESCRIPTION"))

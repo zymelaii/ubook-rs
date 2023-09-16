@@ -14,6 +14,8 @@ fn handle_status_subcmd(matches: &ArgMatches) -> ubook::Result<()> {
 }
 
 fn handle_api_subcmd(matches: &ArgMatches) -> ubook::Result<()> {
+    use reqwest::header::{CONTENT_TYPE, COOKIE};
+
     let host = BoluobaoHost::new();
     let url = matches.get_one::<String>("URL").unwrap();
     let method = matches.get_one::<String>("METHOD").unwrap().to_owned();
@@ -38,14 +40,33 @@ fn handle_api_subcmd(matches: &ArgMatches) -> ubook::Result<()> {
     };
 
     if let Some(cookies) = matches.get_one::<String>("cookies") {
-        request = request.header(reqwest::header::COOKIE, cookies)
+        request = request.header(COOKIE, cookies)
     };
 
     let resp = request.send()?;
-    println!("{:#?}", resp);
 
-    let data = resp.text()?.parse::<serde_json::Value>()?;
-    println!("{:#?}", data);
+    if matches.get_flag("head") {
+        println!("{:?} {}", resp.version(), resp.status());
+        for (name, value) in resp.headers() {
+            println!("{}: {}", name, value.to_str()?);
+        }
+    } else {
+        let display_as_json = if let Some(content_type) = resp.headers().get(CONTENT_TYPE) {
+            content_type.to_str()?.contains("application/json")
+        } else {
+            false
+        };
+
+        if let Ok(raw) = resp.text() {
+            if display_as_json {
+                let data = raw.parse::<serde_json::Value>()?;
+                let json_doc = serde_json::to_string_pretty(&data).unwrap();
+                println!("{}", json_doc);
+            } else {
+                print!("{}", raw);
+            }
+        }
+    }
 
     Ok(())
 }
