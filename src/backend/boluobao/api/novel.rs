@@ -39,7 +39,7 @@ impl crate::api::NovelAPI for BoluobaoHost {
 
         let data =
             process_response::<Vec<types::VolumeInfoV2>>(resp.status(), &resp.text()?)?.unwrap();
-        novel_info.volumes = data.iter().map(|e| e.volumeId).collect();
+        novel_info.volumes = data.iter().map(|e| e.volume_id).collect();
 
         Ok(novel_info)
     }
@@ -59,7 +59,7 @@ impl crate::api::NovelAPI for BoluobaoHost {
             .send()?;
 
         let data: Vec<types::Chapter> = process_response(resp.status(), &resp.text()?)?.unwrap();
-        let data = data.iter().map(|e| e.chapId).collect();
+        let data = data.iter().map(|e| e.chap_id).collect();
 
         // TODO: API to get the novel id of volume
         // volume_info.novel_id = Default::default();

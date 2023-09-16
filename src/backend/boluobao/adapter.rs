@@ -5,13 +5,13 @@ use super::*;
 impl From<types::UserPrivate> for UserInfo {
     fn from(value: types::UserPrivate) -> Self {
         Self {
-            user_id: value.accountId,
-            nickname: value.nickName,
+            user_id: value.account_id,
+            nickname: value.nick_name,
             avatar: value.avatar,
-            is_author: value.isAuthor,
+            is_author: value.is_author,
             private_info: Some(UserInfoPrivate {
-                internal_id: value.userName,
-                phone_number: value.phoneNum,
+                internal_id: value.user_name,
+                phone_number: value.phone_num,
                 email: value.email,
                 ..Default::default()
             }),
@@ -24,24 +24,24 @@ impl From<types::User> for UserInfo {
     fn from(value: types::User) -> Self {
         if let Some(expand) = value.expand {
             Self {
-                user_id: value.accountId,
-                nickname: value.nickName,
+                user_id: value.account_id,
+                nickname: value.nick_name,
                 intro: expand.introduction.unwrap_or_default(),
                 avatar: expand.avatar.unwrap_or_default(),
-                total_follows: expand.followNum.unwrap_or_default(),
-                total_fans: expand.fansNum.unwrap_or_default(),
+                total_follows: expand.follow_num.unwrap_or_default(),
+                total_fans: expand.fans_num.unwrap_or_default(),
                 private_info: Some(UserInfoPrivate {
-                    internal_id: value.userName,
+                    internal_id: value.user_name,
                     ..Default::default()
                 }),
                 ..Default::default()
             }
         } else {
             Self {
-                user_id: value.accountId,
-                nickname: value.nickName,
+                user_id: value.account_id,
+                nickname: value.nick_name,
                 private_info: Some(UserInfoPrivate {
-                    internal_id: value.userName,
+                    internal_id: value.user_name,
                     ..Default::default()
                 }),
                 ..Default::default()
@@ -59,22 +59,22 @@ impl From<types::Novel> for NovelInfo {
         }
 
         let mut novel_info = Self {
-            novel_id: value.novelId.unwrap(),
-            author_id: value.authorId,
-            name: value.novelName,
-            author: value.authorName,
-            total_chars: value.charCount,
-            is_finished: value.isFinish,
-            creation_date: to_timestamp(&value.addTime).unwrap_or_default(),
-            last_update_date: to_timestamp(&value.lastUpdateTime).unwrap_or_default(),
-            cover: value.novelCover,
-            banner: Some(value.bgBanner),
+            novel_id: value.novel_id.unwrap(),
+            author_id: value.author_id,
+            name: value.novel_name,
+            author: value.author_name,
+            total_chars: value.char_count,
+            is_finished: value.is_finish,
+            creation_date: to_timestamp(&value.add_time).unwrap_or_default(),
+            last_update_date: to_timestamp(&value.last_update_time).unwrap_or_default(),
+            cover: value.novel_cover,
+            banner: Some(value.bg_banner),
             sign_info: SignInfo {
-                is_signed: value.signStatus != "普通",
+                is_signed: value.sign_status != "普通",
                 ..Default::default()
             },
             browse_info: BrowseInfo {
-                total_views: value.viewTimes,
+                total_views: value.view_times,
                 ..Default::default()
             },
             ..Default::default()
@@ -82,9 +82,9 @@ impl From<types::Novel> for NovelInfo {
 
         if let Some(expand) = value.expand {
             novel_info.intro = expand.intro.unwrap_or_default();
-            novel_info.r#type = expand.typeName.unwrap_or_default();
+            novel_info.r#type = expand.type_name.unwrap_or_default();
 
-            let sign_level = expand.signLevel.unwrap_or_default();
+            let sign_level = expand.sign_level.unwrap_or_default();
             novel_info.sign_info.level = match sign_level.as_str() {
                 "normal" => 1,
                 "vipB" => 2,
@@ -105,7 +105,7 @@ impl From<types::Novel> for NovelInfo {
 impl From<types::VolumeInfoV2> for VolumeInfo {
     fn from(value: types::VolumeInfoV2) -> Self {
         Self {
-            volume_id: value.volumeId,
+            volume_id: value.volume_id,
             title: value.title,
             order: value.sno as usize,
             ..Default::default()
@@ -121,24 +121,24 @@ impl From<types::Chapter> for ChapterInfo {
                 .into())
         }
 
-        let pub_date = to_timestamp(&value.addTime).unwrap_or_default();
+        let pub_date = to_timestamp(&value.add_time).unwrap_or_default();
 
         Self {
-            novel_id: value.novelId,
-            volume_id: value.volumeId,
-            chapter_id: value.chapId,
+            novel_id: value.novel_id,
+            volume_id: value.volume_id,
+            chapter_id: value.chap_id,
             title: value.title,
-            order: value.chapOrder.try_into().unwrap(),
-            total_words: value.charCount,
+            order: value.chap_order.try_into().unwrap(),
+            total_words: value.char_count,
             pub_date,
             rev_date: value
-                .updateTime
+                .update_time
                 .and_then(|time| to_timestamp(&time).ok())
                 .unwrap_or(pub_date),
             price_info: value.expand.as_ref().map(|e| PriceInfo {
-                is_free: e.needFireMoney.map(|e| e == 0).unwrap_or(false),
-                original_price: e.originNeedFireMoney.unwrap_or_default() as f32,
-                sale_price: e.needFireMoney.map(|price| price as f32),
+                is_free: e.need_fire_money.map(|e| e == 0).unwrap_or(false),
+                original_price: e.origin_need_fire_money.unwrap_or_default() as f32,
+                sale_price: e.need_fire_money.map(|price| price as f32),
             }),
             content: value.expand.and_then(|e| e.content),
         }
