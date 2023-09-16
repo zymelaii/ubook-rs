@@ -45,5 +45,9 @@ pub trait NovelAPI {
     /// `可选登录` 获取章节正文
     ///
     /// 当目标章节不存在或章节未订阅时获取失败
-    fn try_get_chapter_content(&mut self, chapter_id: Id) -> crate::Result<String>;
+    fn try_get_chapter_content(
+        &mut self,
+        chapter_id: Id,
+        user_id: Option<Id>,
+    ) -> crate::Result<String>;
 }
