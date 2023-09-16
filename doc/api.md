@@ -61,6 +61,15 @@
    - unauditedCustomtag
    - homeFlag
    - isbranch
+- 小说章节信息
+  - authorTalk
+  - chatLines
+  - content
+  - isBranch
+  - isContentEncrypted
+  - needFireMoney
+  - originNeedFireMoney
+  - tsukkomi
 
 > expand 通常允许递归地生效，这表示其可以作用于 expand 子项的 expand 属性展开。出于一致性考虑，在本文档中均排除多级的 expand 参数。
 
@@ -106,6 +115,22 @@ GET /user/novels
 - [P] expand (字符串，可选) 需要附加的小说信息，以逗号分隔，默认为空
 
 > 需要登录
+
+## 分卷信息
+
+```plain
+GET /volumes/:volume-id
+```
+
+- [U] volume-id (整型, 可选) 查询的分卷 ID
+
+## 分卷章节信息
+
+```plain
+GET /volumes/:volume-id/chaps
+```
+
+- [U] volume-id (整型, 可选) 查询的分卷 ID
 
 ## 当前用户的签到记录
 
@@ -412,6 +437,40 @@ GET /novels
   - recom
 - [P] expand (字符串, 可选) 需要展开的小说信息，以逗号分隔，默认为空
 
+## 小说信息
+
+```plain
+GET /novels/:novel-id
+```
+
+- [U] novel-id (整型, 必须) 需要查询的小说 ID
+- [P] expand (字符串, 可选) 需要展开的小说信息，以逗号分隔，默认为空
+
+## 小说目录
+
+```plain
+GET /novels/:novel-id/dirs
+```
+
+- [U] novel-id (整型, 必须) 需要查询的小说 ID
+- [P] expand (字符串, 可选) 需要展开的小说章节信息，以逗号分隔，默认为空
+
+## 小说分卷列表
+
+```plain
+GET /novels/:novel-id/volumes
+```
+
+- [U] novel-id (整型, 必须) 需要查询的小说 ID
+
+## 小说章节列表
+
+```plain
+GET /novels/:novel-id/chaps
+```
+
+- [U] novel-id (整型, 必须) 需要查询的小说 ID
+
 ## 特别推送的小说列表
 
 ```plain
@@ -563,6 +622,15 @@ GET /entity/0/discountCoupons/qualification
 - [P] businessscenario (整型, 可选) 默认为 0
 
 > 需要登录
+
+## 章节信息
+
+```plain
+GET /chaps/:chap-id
+```
+
+- [U] chap-id (整型, 必须) 查询的章节 ID
+- [P] expand (字符串, 可选) 需要展开的小说章节信息，以逗号分隔，默认为空
 
 ## 章节评论
 
