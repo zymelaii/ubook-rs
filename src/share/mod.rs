@@ -14,7 +14,7 @@ use std::fmt;
 pub type Id = i32;
 pub type Url = String;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Timestamp(i64);
 
 impl Timestamp {
@@ -22,12 +22,14 @@ impl Timestamp {
         Self(Local::now().timestamp_millis())
     }
 
-    pub fn from(dur: i64) -> Self {
-        Self(dur)
-    }
-
     pub fn count(&self) -> i64 {
         self.0
+    }
+}
+
+impl From<i64> for Timestamp {
+    fn from(value: i64) -> Self {
+        Self(value)
     }
 }
 
