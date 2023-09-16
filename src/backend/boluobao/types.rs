@@ -152,6 +152,7 @@ pub struct Novel {
     pub isSensitive: bool,
     pub lastUpdateTime: String,
     pub markCount: usize,
+    pub novelCover: String,
     pub novelName: String,
     pub point: f32,
     pub signStatus: String,
@@ -162,42 +163,76 @@ pub struct Novel {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[allow(non_snake_case)]
-pub struct Chapter {
-    pub novelId: i32,
-    pub volumeId: i32,
-    pub chapId: i32,
-
-    pub title: String,
-    pub ntitle: String,
-
-    pub sno: f32,
-    pub chapOrder: i32,
-
-    pub rowNum: usize,
-    pub charCount: usize,
-
-    pub isVip: bool,
-    pub isRubbish: bool,
-    pub auditStatus: i32,
-
-    pub AddTime: String,
-    pub updateTime: Option<String>,
-
-    pub needFireMoney: usize,
-    pub originNeedFireMoney: usize,
-    pub chapterOriginFireMoney: usize,
-    pub canUnlockWithAd: bool,
-
+pub struct ChapterExpand {
     pub content: Option<String>,
+    pub isBranch: Option<bool>,
+    pub isContentEncrypted: Option<bool>,
+    pub needFireMoney: Option<usize>,
+    pub originNeedFireMoney: Option<usize>,
+    //pub chatLines: Option<serde_json::Value>,
+    //pub authorTalk: Option<serde_json::Value>,
+    //pub tsukkomi: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 #[allow(non_snake_case)]
-pub struct Volume {
+pub struct Chapter {
+    pub addTime: String,
+    pub auditStatus: i32,
+    pub chapId: i32,
+    pub charCount: usize,
+    pub chapOrder: i32,
+    pub expand: Option<ChapterExpand>,
+    pub isRubbish: bool,
+    pub isVip: bool,
+    pub novelId: i32,
+    pub ntitle: String,
+    pub rowNum: usize,
+    pub sno: f32,
+    pub title: String,
+    pub updateTime: Option<String>,
+    pub volumeId: i32,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[allow(non_snake_case)]
+pub struct ChapterInfo {
+    pub AddTime: String,
+    pub auditStatus: i32,
+    pub canUnlockWithAd: bool,
+    pub chapId: i32,
+    pub chapOrder: i32,
+    pub chapterOriginFireMoney: usize,
+    pub charCount: usize,
+    pub content: Option<String>,
+    pub isRubbish: bool,
+    pub isVip: bool,
+    pub needFireMoney: usize,
+    pub novelId: i32,
+    pub ntitle: String,
+    pub originNeedFireMoney: usize,
+    pub rowNum: usize,
+    pub sno: f32,
+    pub title: String,
+    pub updateTime: Option<String>,
+    pub volumeId: i32,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[allow(non_snake_case)]
+pub struct VolumeInfoV1 {
     pub volumeId: i32,
     pub sno: f32,
     pub title: String,
-    pub chapterList: Vec<Chapter>,
+    pub chapterList: Vec<ChapterInfo>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[allow(non_snake_case)]
+pub struct VolumeInfoV2 {
+    pub volumeId: i32,
+    pub sno: f32,
+    pub title: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -205,7 +240,7 @@ pub struct Volume {
 pub struct Catalogue {
     pub novelId: i32,
     pub lastUpdateTime: String,
-    pub volumeList: Vec<Volume>,
+    pub volumeList: Vec<VolumeInfoV1>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
