@@ -1,9 +1,12 @@
 use super::*;
+
+use async_trait::async_trait;
 use reqwest::{header::*, StatusCode};
 use serde_json::json;
 
+#[async_trait]
 impl crate::api::AuthAPI for BoluobaoHost {
-    fn authenticate(&mut self, account: &str, password: &str) -> crate::Result<String> {
+    async fn authenticate(&mut self, account: &str, password: &str) -> crate::Result<String> {
         let secrets = json!({
             "username": account,
             "password": password,
@@ -13,7 +16,8 @@ impl crate::api::AuthAPI for BoluobaoHost {
             .as_guest()
             .api_post("/sessions")
             .body(secrets.to_string())
-            .send()?;
+            .send()
+            .await?;
 
         let auth_cookies = [".SFCommunity", "session_APP"];
         let cookies = resp
@@ -23,14 +27,14 @@ impl crate::api::AuthAPI for BoluobaoHost {
             .collect::<Vec<String>>()
             .join("; ");
 
-        process_response::<()>(resp.status(), resp.text()?.as_str())?;
+        process_response::<()>(resp.status(), resp.text().await?.as_str())?;
 
         Ok(cookies)
     }
 
-    fn query_auth_status(&mut self, user_id: Id) -> crate::Result<()> {
+    async fn query_auth_status(&mut self, user_id: Id) -> crate::Result<()> {
         if let Some(host) = self.as_auth(user_id) {
-            let resp = host.api_get("/user").send()?;
+            let resp = host.api_get("/user").send().await?;
             if resp.status() == StatusCode::OK {
                 Ok(())
             } else {
@@ -41,16 +45,18 @@ impl crate::api::AuthAPI for BoluobaoHost {
         }
     }
 
-    fn login(&mut self, account: &str, password: &str) -> crate::Result<Id> {
-        let cookie = self.authenticate(account, password)?;
+    async fn login(&mut self, account: &str, password: &str) -> crate::Result<Id> {
+        let cookie = self.authenticate(account, password).await?;
         let resp = self
             .as_guest()
             .api_get("/user")
             .header(COOKIE, &cookie)
-            .send()?;
+            .send()
+            .await?;
 
-        let data: types::UserPrivate = process_response(resp.status(), resp.text()?.as_str())?
-            .expect("missing expected field");
+        let data: types::UserPrivate =
+            process_response(resp.status(), resp.text().await?.as_str())?
+                .expect("missing expected field");
         let user_id = UserInfo::from(data).user_id;
 
         let mut session = SessionInfo::default();
@@ -67,7 +73,7 @@ impl crate::api::AuthAPI for BoluobaoHost {
         Ok(user_id)
     }
 
-    fn logout(&mut self, user_id: Id) -> crate::Result<()> {
+    async fn logout(&mut self, user_id: Id) -> crate::Result<()> {
         self.remove_auth(user_id);
         Ok(())
     }

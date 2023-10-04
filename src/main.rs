@@ -5,7 +5,7 @@ fn handle_subcmd_backend(args: cli::BackendArgs) -> ubook::Result<()> {
     todo!()
 }
 
-fn handle_subcmd_api(args: cli::APIArgs) -> ubook::Result<()> {
+async fn handle_subcmd_api(args: cli::APIArgs) -> ubook::Result<()> {
     use reqwest::header::{CONTENT_TYPE, COOKIE};
     use ubook::cli::RequestMethod;
 
@@ -27,7 +27,7 @@ fn handle_subcmd_api(args: cli::APIArgs) -> ubook::Result<()> {
                 .collect::<Vec<(&str, &str)>>(),
         );
 
-    let resp = request.send()?;
+    let resp = request.send().await?;
 
     let is_json = resp
         .headers()
@@ -44,7 +44,7 @@ fn handle_subcmd_api(args: cli::APIArgs) -> ubook::Result<()> {
         for (name, value) in resp.headers() {
             println!("{name}: {}", value.to_str()?);
         }
-    } else if let Ok(raw) = resp.text() {
+    } else if let Ok(raw) = resp.text().await {
         if is_json {
             let data = raw.parse::<serde_json::Value>()?;
             let json_doc = serde_json::to_string_pretty(&data)?;
@@ -62,11 +62,12 @@ fn handle_subcmd_auth(args: cli::AuthArgs) -> ubook::Result<()> {
     todo!()
 }
 
-fn main() -> ubook::Result<()> {
+#[tokio::main]
+async fn main() -> ubook::Result<()> {
     use clap::Parser;
     match cli::Cli::parse().subcmd {
         cli::SubCli::Backend(args) => handle_subcmd_backend(args),
-        cli::SubCli::API(args) => handle_subcmd_api(args),
+        cli::SubCli::API(args) => handle_subcmd_api(args).await,
         cli::SubCli::Auth(args) => handle_subcmd_auth(args),
     }
 }

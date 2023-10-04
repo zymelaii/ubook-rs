@@ -9,9 +9,8 @@ pub use internal::*;
 
 use crate::share::*;
 use reqwest::{
-    blocking::{Client, RequestBuilder},
     header::{HeaderMap, *},
-    IntoUrl, Method, StatusCode,
+    IntoUrl, Method, StatusCode, {Client, RequestBuilder},
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
