@@ -85,7 +85,7 @@ impl crate::api::NovelAPI for BoluobaoHost {
         Ok(data.into())
     }
 
-    fn try_get_chapter_content(
+    fn get_chapter_content(
         &mut self,
         chapter_id: Id,
         user_id: Option<Id>,

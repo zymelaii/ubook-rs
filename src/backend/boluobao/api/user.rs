@@ -18,7 +18,7 @@ impl crate::api::UserAPI for BoluobaoHost {
         })
     }
 
-    fn try_get_profile(&mut self, user_id: Id, with_private: bool) -> crate::Result<UserInfo> {
+    fn get_profile(&mut self, user_id: Id, with_private: bool) -> crate::Result<UserInfo> {
         let basic_user_info = self.query_user_info(user_id)?;
 
         if let Some(host) = self.as_auth(user_id) {

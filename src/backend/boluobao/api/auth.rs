@@ -3,7 +3,7 @@ use reqwest::{header::*, StatusCode};
 use serde_json::json;
 
 impl crate::api::AuthAPI for BoluobaoHost {
-    fn try_auth(&mut self, account: &str, password: &str) -> crate::Result<String> {
+    fn authenticate(&mut self, account: &str, password: &str) -> crate::Result<String> {
         let secrets = json!({
             "username": account,
             "password": password,
@@ -41,8 +41,8 @@ impl crate::api::AuthAPI for BoluobaoHost {
         }
     }
 
-    fn try_login(&mut self, account: &str, password: &str) -> crate::Result<Id> {
-        let cookie = self.try_auth(account, password)?;
+    fn login(&mut self, account: &str, password: &str) -> crate::Result<Id> {
+        let cookie = self.authenticate(account, password)?;
         let resp = self
             .as_guest()
             .api_get("/user")
@@ -67,7 +67,7 @@ impl crate::api::AuthAPI for BoluobaoHost {
         Ok(user_id)
     }
 
-    fn try_logout(&mut self, user_id: Id) -> crate::Result<()> {
+    fn logout(&mut self, user_id: Id) -> crate::Result<()> {
         self.remove_auth(user_id);
         Ok(())
     }
