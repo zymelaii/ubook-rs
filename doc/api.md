@@ -70,6 +70,28 @@
   - needFireMoney
   - originNeedFireMoney
   - tsukkomi
+- 漫画信息
+  - bigBgBanner
+  - discount
+  - discountExpireDate
+  - fav
+  - intro
+  - originTotalNeedFireMoney
+  - tags
+  - ticket
+  - totalNeedMoney
+  - typeName
+  - authorName
+- 有声小说信息
+  - chapterCount
+  - discount
+  - discountExpireDate
+  - fav
+  - intro
+  - originTotalNeedFireMoney
+  - ticket
+  - totalNeedMoney
+  - authorName
 
 > expand 通常允许递归地生效，这表示其可以作用于 expand 子项的 expand 属性展开。出于一致性考虑，在本文档中均排除多级的 expand 参数。
 
@@ -560,6 +582,50 @@ GET /novels/:novel-id/fans
 ```
 
 - [U] novel-id (整型, 必须) 需要查询的小说 ID
+
+## 搜索任意作品
+
+```plain
+GET /search/any/result
+```
+
+- [P] q (字符串, 必须) 查询的关键字
+- [P] size (整型, 必须) 查询的最大结果个数
+- [P] page (整型, 必须) 查询页（以 size 为单位）
+- [P] expand (字符串, 可选) 需要展开的作品信息，以逗号分隔，默认为空
+
+## 搜索小说作品
+
+```plain
+GET /search/novels/result
+```
+
+- [P] q (字符串, 必须) 查询的关键字
+- [P] size (整型, 必须) 查询的最大结果个数
+- [P] page (整型, 必须) 查询页（以 size 为单位）
+- [P] expand (字符串, 可选) 需要展开的作品信息，以逗号分隔，默认为空
+
+## 搜索漫画作品
+
+```plain
+GET /search/comics/result
+```
+
+- [P] q (字符串, 必须) 查询的关键字
+- [P] size (整型, 必须) 查询的最大结果个数
+- [P] page (整型, 必须) 查询页（以 size 为单位）
+- [P] expand (字符串, 可选) 需要展开的作品信息，以逗号分隔，默认为空
+
+## 搜索有声小说作品
+
+```plain
+GET /search/albums/result
+```
+
+- [P] q (字符串, 必须) 查询的关键字
+- [P] size (整型, 必须) 查询的最大结果个数
+- [P] page (整型, 必须) 查询页（以 size 为单位）
+- [P] expand (字符串, 可选) 需要展开的作品信息，以逗号分隔，默认为空
 
 ## 特别推送信息
 
