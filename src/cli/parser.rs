@@ -4,7 +4,11 @@ use clap::{
 };
 
 #[derive(Parser)]
-#[command(about = "Manage backends", long_about = None,arg_required_else_help(true))]
+#[command(
+    about = "Manage backends",
+    long_about = None,
+    arg_required_else_help(true),
+)]
 pub struct BackendArgs {
     #[arg(short, long, help = "List available backends")]
     pub list: bool,
@@ -134,10 +138,43 @@ pub struct AuthArgs {
     pub subcmd: AuthSubCli,
 }
 
+#[derive(Parser)]
+#[command(
+    about = "Search across available backends",
+    long_about = None,
+    arg_required_else_help(true),
+)]
+pub struct SearchArgs {
+    #[arg(
+        short,
+        long,
+        default_value = "all",
+        help = "Specify targets for the search",
+        long_help = r#"Specify targets for the search and possible targets are
+  + all: search for all types of work
+  + n: search for novels
+  + c: search for comics
+  + a: search for albums
+  + s: search for short stories
+use `all` or any combination of n/c/s/a to indicates the expected targets"#
+    )]
+    pub target: String,
+    #[arg(
+        short = 'n',
+        long,
+        default_value = "10",
+        help = "Specify the max number of results",
+    )]
+    pub limit: usize,
+    #[arg(help = "Specify the keywords")]
+    pub keyword: String,
+}
+
 pub enum SubCli {
     Backend(BackendArgs),
     API(APIArgs),
     Auth(AuthArgs),
+    Search(SearchArgs),
 }
 
 #[derive(Parser)]
@@ -206,6 +243,7 @@ impl FromArgMatches for SubCli {
             Some(("backend", args)) => Ok(Self::Backend(BackendArgs::from_arg_matches(args)?)),
             Some(("api", args)) => Ok(Self::API(APIArgs::from_arg_matches(args)?)),
             Some(("auth", args)) => Ok(Self::Auth(AuthArgs::from_arg_matches(args)?)),
+            Some(("search", args)) => Ok(Self::Search(SearchArgs::from_arg_matches(args)?)),
             Some((_, _)) => Err(Error::raw(
                 ErrorKind::InvalidSubcommand,
                 "invalid subcommand",
@@ -222,6 +260,7 @@ impl FromArgMatches for SubCli {
             Some(("backend", args)) => *self = Self::Backend(BackendArgs::from_arg_matches(args)?),
             Some(("api", args)) => *self = Self::API(APIArgs::from_arg_matches(args)?),
             Some(("auth", args)) => *self = Self::Auth(AuthArgs::from_arg_matches(args)?),
+            Some(("search", args)) => *self = Self::Search(SearchArgs::from_arg_matches(args)?),
             Some((_, _)) => {
                 return Err(Error::raw(
                     ErrorKind::InvalidSubcommand,
@@ -239,6 +278,7 @@ impl Subcommand for SubCli {
         cmd.subcommand(BackendArgs::augment_args(Command::new("backend")))
             .subcommand(APIArgs::augment_args(Command::new("api")))
             .subcommand(AuthArgs::augment_args(Command::new("auth")))
+            .subcommand(SearchArgs::augment_args(Command::new("search")))
     }
 
     fn augment_subcommands_for_update(cmd: Command) -> Command {
@@ -246,6 +286,6 @@ impl Subcommand for SubCli {
     }
 
     fn has_subcommand(name: &str) -> bool {
-        matches!(name, "backend" | "api" | "auth")
+        matches!(name, "backend" | "api" | "auth" | "search")
     }
 }

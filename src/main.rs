@@ -1,4 +1,11 @@
-use ubook::{backend::BoluobaoHost, cli};
+use prettytable::{row, Table};
+use std::collections::HashSet;
+use ubook::{
+    api::SearchAPI,
+    backend::BoluobaoHost,
+    cli,
+    share::{WorkSearchResult, WorkType},
+};
 
 fn handle_subcmd_backend(args: cli::BackendArgs) -> ubook::Result<()> {
     let _ = args;
@@ -62,6 +69,73 @@ fn handle_subcmd_auth(args: cli::AuthArgs) -> ubook::Result<()> {
     todo!()
 }
 
+async fn handle_subcmd_search(args: cli::SearchArgs) -> ubook::Result<()> {
+    let target = if args.target != "all" {
+        args.target
+            .chars()
+            .filter_map(|c| match c {
+                'n' => Some(Some(WorkType::Novel)),
+                'c' => Some(Some(WorkType::Comic)),
+                'a' => Some(Some(WorkType::Audiobook)),
+                's' => Some(Some(WorkType::ShortStory)),
+                _ => None,
+            })
+            .collect::<HashSet<_>>()
+            .into_iter()
+            .collect::<Vec<_>>()
+    } else {
+        vec![None]
+    };
+
+    let mut host = BoluobaoHost::new();
+    let mut work_list: Vec<WorkSearchResult> = Default::default();
+    for work_type in target {
+        host.search(
+            &args.keyword,
+            args.limit,
+            work_type,
+            Box::new(|works: Vec<WorkSearchResult>| {
+                work_list.extend(works);
+                true
+            }),
+        )
+        .await?;
+    }
+    work_list.sort_by(|lhs, rhs| rhs.popularity.cmp(&lhs.popularity));
+    if args.limit > 0 && work_list.len() > args.limit {
+        work_list.drain(args.limit..);
+    }
+
+    fn conv(x: usize) -> String {
+        if x > 100000 {
+            format!("{:.2}w", x as f64 / 1e4)
+        } else if x > 1000 {
+            format!("{:.2}k", x as f64 / 1e3)
+        } else {
+            x.to_string()
+        }
+    }
+
+    if !work_list.is_empty() {
+        let mut table = Table::new();
+        table.set_format(*prettytable::format::consts::FORMAT_NO_COLSEP);
+        table.set_titles(row![bc => "Type", "ID" , "Name", "Author", "Tags", "Popularity"]);
+        for work in work_list {
+            table.add_row(row![
+                lb -> format!("{:?}", work.r#type).as_str(),
+                lb -> work.work_id.to_string().as_str(),
+                c -> work.work_name.as_str(),
+                c -> work.author_name.as_str(),
+                r -> work.tags.join(" ").as_str(),
+                r -> conv(work.popularity).as_str(),
+            ]);
+        }
+        table.printstd();
+    }
+
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> ubook::Result<()> {
     use clap::Parser;
@@ -69,5 +143,6 @@ async fn main() -> ubook::Result<()> {
         cli::SubCli::Backend(args) => handle_subcmd_backend(args),
         cli::SubCli::API(args) => handle_subcmd_api(args).await,
         cli::SubCli::Auth(args) => handle_subcmd_auth(args),
+        cli::SubCli::Search(args) => handle_subcmd_search(args).await,
     }
 }
