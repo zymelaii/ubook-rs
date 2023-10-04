@@ -56,3 +56,16 @@ pub trait NovelAPI {
         user_id: Option<Id>,
     ) -> crate::Result<String>;
 }
+
+#[async_trait]
+pub trait SearchAPI {
+    async fn search<F>(
+        &mut self,
+        keyword: &str,
+        limit: usize,
+        work_type: Option<WorkType>,
+        mut callback: F,
+    ) -> crate::Result<usize>
+    where
+        F: FnMut(Vec<WorkSearchResult>) -> bool + Send;
+}

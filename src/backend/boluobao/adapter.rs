@@ -1,4 +1,5 @@
 use chrono::NaiveDateTime;
+use std::collections::HashSet;
 
 use super::*;
 
@@ -142,5 +143,80 @@ impl From<types::Chapter> for ChapterInfo {
             }),
             content: value.expand.and_then(|e| e.content),
         }
+    }
+}
+
+impl From<types::NovelRecord> for WorkSearchResult {
+    fn from(value: types::NovelRecord) -> Self {
+        let mut result = Self {
+            r#type: WorkType::Novel,
+            work_id: value.novel_id,
+            author_id: value.author_id,
+            work_name: value.novel_name,
+            author_name: value.author_name,
+            cover: value.novel_cover,
+            popularity: value.view_times,
+            ..Default::default()
+        };
+
+        if let Some(expand) = value.expand {
+            result.intro = expand.intro.unwrap_or_default();
+            let mut tags = expand
+                .tags
+                .unwrap_or_default()
+                .into_iter()
+                .collect::<HashSet<_>>();
+            if let Some(sys_tags) = expand.sys_tags {
+                for tag in sys_tags {
+                    tags.insert(tag.tag_name.clone());
+                }
+            }
+            result.tags = tags.into_iter().collect();
+        }
+
+        result
+    }
+}
+
+impl From<types::ComicRecord> for WorkSearchResult {
+    fn from(value: types::ComicRecord) -> Self {
+        let mut result = Self {
+            r#type: WorkType::Comic,
+            work_id: value.comic_id,
+            author_id: value.author_id,
+            work_name: value.comic_name,
+            cover: value.comic_cover,
+            popularity: value.view_times,
+            ..Default::default()
+        };
+
+        if let Some(expand) = value.expand {
+            result.author_name = expand.author_name.unwrap_or("Unknown".into());
+            result.intro = expand.intro.unwrap_or_default();
+            result.tags = expand.tags.unwrap_or_default();
+        }
+
+        result
+    }
+}
+
+impl From<types::AlbumRecord> for WorkSearchResult {
+    fn from(value: types::AlbumRecord) -> Self {
+        let mut result = Self {
+            r#type: WorkType::Audiobook,
+            work_id: value.album_id,
+            author_id: value.author_id,
+            work_name: value.name,
+            cover: value.cover_medium,
+            popularity: value.visit_times,
+            ..Default::default()
+        };
+
+        if let Some(expand) = value.expand {
+            result.author_name = expand.author_name.unwrap_or("Unknown".into());
+            result.intro = expand.intro.unwrap_or_default();
+        }
+
+        result
     }
 }

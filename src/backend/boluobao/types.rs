@@ -246,6 +246,36 @@ pub struct Catalogue {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct ComicExpand {
+    pub big_bg_banner: Option<String>,
+    pub discount: Option<f32>,
+    pub discount_expire_date: Option<String>,
+    pub fav: Option<usize>,
+    pub intro: Option<String>,
+    pub origin_total_need_fire_money: Option<usize>,
+    pub tags: Option<Vec<String>>,
+    pub ticket: Option<usize>,
+    pub total_need_money: Option<usize>,
+    pub type_name: Option<String>,
+    pub author_name: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AlbumExpand {
+    pub chapter_count: Option<usize>,
+    pub discount: Option<f32>,
+    pub discount_expire_date: Option<String>,
+    pub fav: Option<usize>,
+    pub intro: Option<String>,
+    pub origin_total_need_fire_money: Option<usize>,
+    pub ticket: Option<usize>,
+    pub total_need_money: Option<usize>,
+    pub author_name: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct NovelRef {
     pub allow_down: bool,
     pub author_id: i32,
@@ -253,7 +283,7 @@ pub struct NovelRef {
     pub bg_banner: String,
     pub category_id: i32,
     pub char_count: usize,
-    pub expand: Option<serde_json::Value>,
+    pub expand: Option<NovelExpand>,
     pub is_finish: bool,
     pub is_sensitive: bool,
     pub is_sticky: bool,
@@ -360,12 +390,50 @@ pub struct NovelRecord {
     pub type_id: i32,
     pub view_times: usize,
     pub weight: i32,
+    pub expand: Option<NovelExpand>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ComicRecord {
+    pub author_id: i32,
+    pub bg_banner: String,
+    pub comic_cover: String,
+    pub comic_id: i32,
+    pub comic_name: String,
+    pub expand: Option<ComicExpand>,
+    pub folder_name: String,
+    pub is_finished: bool,
+    pub last_update_time: String,
+    pub latest_chapter_title: String,
+    pub point: f32,
+    pub sign_status: String,
+    pub type_id: i32,
+    pub view_times: usize,
+    pub weight: usize,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AlbumRecord {
+    pub album_id: i32,
+    pub author_id: i32,
+    pub cover_big: String,
+    pub cover_medium: String,
+    pub cover_small: String,
+    pub last_update_time: String,
+    pub latest_chapter_id: i32,
+    pub name: String,
+    pub novel_id: i32,
+    pub visit_times: usize,
+    pub weight: i32,
+    pub expand: Option<AlbumExpand>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SearchResult {
-    pub albums: Vec<AlbumRef>,
-    pub comics: Vec<ComicRef>,
     pub novels: Vec<NovelRecord>,
+    pub comics: Vec<ComicRecord>,
+    pub albums: Vec<AlbumRecord>,
 }

@@ -1,8 +1,10 @@
 use super::*;
 
 /// 作品类型
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 pub enum WorkType {
+    /// 未知类型
+    Unknown,
     /// 小说
     Novel,
     /// 漫画
@@ -13,6 +15,12 @@ pub enum WorkType {
     ShortStory,
 }
 
+impl Default for WorkType {
+    fn default() -> Self {
+        Self::Unknown
+    }
+}
+
 /// 作品引用
 #[derive(Debug)]
 pub struct WorkRef {
@@ -20,6 +28,29 @@ pub struct WorkRef {
     pub r#type: WorkType,
     /// 作品 ID
     pub work_id: Id,
+}
+
+/// 作品检索记录
+#[derive(Debug, Default)]
+pub struct WorkSearchResult {
+    /// 作品类型
+    pub r#type: WorkType,
+    /// 作品 ID
+    pub work_id: Id,
+    /// 作者 ID
+    pub author_id: Id,
+    /// 作品名称
+    pub work_name: String,
+    /// 作者名称
+    pub author_name: String,
+    /// 作品封面
+    pub cover: Url,
+    /// 作品简介
+    pub intro: String,
+    /// 作品标签
+    pub tags: Vec<String>,
+    /// 作品热度
+    pub popularity: usize,
 }
 
 /// 价格信息
