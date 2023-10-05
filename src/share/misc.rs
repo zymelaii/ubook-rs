@@ -1,7 +1,9 @@
+use serde::Serialize;
+
 use super::*;
 
 /// 作品类型
-#[derive(Debug, Eq, PartialEq, Hash)]
+#[derive(Debug, Eq, PartialEq, Hash, Serialize)]
 pub enum WorkType {
     /// 未知类型
     Unknown,
@@ -31,7 +33,7 @@ pub struct WorkRef {
 }
 
 /// 作品检索记录
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize)]
 pub struct WorkSearchResult {
     /// 作品类型
     pub r#type: WorkType,

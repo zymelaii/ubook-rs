@@ -116,7 +116,9 @@ async fn handle_subcmd_search(args: cli::SearchArgs) -> ubook::Result<()> {
         }
     }
 
-    if !work_list.is_empty() {
+    if args.json {
+        println!("{}", serde_json::to_string(&work_list)?)
+    } else if !work_list.is_empty() {
         let mut table = Table::new();
         table.set_format(*prettytable::format::consts::FORMAT_NO_COLSEP);
         table.set_titles(row![bc => "Type", "ID" , "Name", "Author", "Tags", "Popularity"]);

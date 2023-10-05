@@ -163,9 +163,11 @@ use `all` or any combination of n/c/s/a to indicates the expected targets"#
         short = 'n',
         long,
         default_value = "10",
-        help = "Specify the max number of results",
+        help = "Specify the max number of results"
     )]
     pub limit: usize,
+    #[arg(long, help = "Print as json")]
+    pub json: bool,
     #[arg(help = "Specify the keywords")]
     pub keyword: String,
 }
