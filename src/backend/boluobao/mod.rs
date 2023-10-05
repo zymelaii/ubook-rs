@@ -153,7 +153,7 @@ where
     }
 }
 
-impl crate::Backend for BoluobaoHost {
+impl crate::BackendCore for BoluobaoHost {
     fn backend_id(&self) -> &'static str {
         "boluobao"
     }

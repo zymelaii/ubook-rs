@@ -59,13 +59,11 @@ pub trait NovelAPI {
 
 #[async_trait]
 pub trait SearchAPI {
-    async fn search<F>(
+    async fn search(
         &mut self,
         keyword: &str,
         limit: usize,
         work_type: Option<WorkType>,
-        mut callback: F,
-    ) -> crate::Result<usize>
-    where
-        F: FnMut(Vec<WorkSearchResult>) -> bool + Send;
+        mut callback: Box<dyn FnMut(Vec<WorkSearchResult>) -> bool + Send>,
+    ) -> crate::Result<usize>;
 }

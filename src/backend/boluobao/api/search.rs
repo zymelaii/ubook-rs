@@ -4,16 +4,13 @@ use async_trait::async_trait;
 
 #[async_trait]
 impl crate::api::SearchAPI for BoluobaoHost {
-    async fn search<F>(
+    async fn search(
         &mut self,
         keyword: &str,
         limit: usize,
         work_type: Option<WorkType>,
-        mut callback: F,
-    ) -> crate::Result<usize>
-    where
-        F: FnMut(Vec<WorkSearchResult>) -> bool + Send,
-    {
+        mut callback: Box<dyn FnMut(Vec<WorkSearchResult>) -> bool + Send>,
+    ) -> crate::Result<usize> {
         const MAX_SIZE_PER_PAGE: usize = 16;
 
         let host = self.as_guest();

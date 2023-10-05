@@ -1,11 +1,12 @@
 use prettytable::{row, Table};
-use std::collections::HashSet;
+use std::{
+    collections::HashSet,
+    sync::{Arc, Mutex},
+};
 use ubook::{
-    api::SearchAPI,
     backend::BoluobaoHost,
     cli,
     share::{WorkSearchResult, WorkType},
-    Backend,
 };
 
 fn handle_subcmd_backend(args: cli::BackendArgs) -> ubook::Result<()> {
@@ -88,20 +89,25 @@ async fn handle_subcmd_search(args: cli::SearchArgs) -> ubook::Result<()> {
         vec![None]
     };
 
-    let mut host = BoluobaoHost::new();
-    let mut work_list: Vec<WorkSearchResult> = Default::default();
+    let mut backend: Box<dyn ubook::BackendCore> = Box::new(BoluobaoHost::new());
+    let work_list: Arc<Mutex<Vec<WorkSearchResult>>> = Default::default();
     for work_type in target {
-        host.search(
-            &args.keyword,
-            args.limit,
-            work_type,
-            Box::new(|works: Vec<WorkSearchResult>| {
-                work_list.extend(works);
-                true
-            }),
-        )
-        .await?;
+        let list = work_list.clone();
+        backend
+            .search(
+                &args.keyword,
+                args.limit,
+                work_type,
+                Box::new(move |works: Vec<WorkSearchResult>| {
+                    list.lock().unwrap().extend(works);
+                    true
+                }),
+            )
+            .await?;
     }
+
+    assert!(Arc::strong_count(&work_list) == 1);
+    let mut work_list = Arc::try_unwrap(work_list).unwrap().into_inner().unwrap();
     work_list.sort_by(|lhs, rhs| rhs.popularity.cmp(&lhs.popularity));
     if args.limit > 0 && work_list.len() > args.limit {
         work_list.drain(args.limit..);
@@ -127,7 +133,7 @@ async fn handle_subcmd_search(args: cli::SearchArgs) -> ubook::Result<()> {
         );
         for work in work_list {
             table.add_row(row![
-                cbFg -> host.backend_id(),
+                cbFg -> backend.backend_id(),
                 lb -> format!("{:?}", work.r#type).as_str(),
                 lb -> work.work_id.to_string().as_str(),
                 cbFy -> work.work_name.as_str(),
