@@ -5,6 +5,7 @@ use ubook::{
     backend::BoluobaoHost,
     cli,
     share::{WorkSearchResult, WorkType},
+    Backend,
 };
 
 fn handle_subcmd_backend(args: cli::BackendArgs) -> ubook::Result<()> {
@@ -121,15 +122,18 @@ async fn handle_subcmd_search(args: cli::SearchArgs) -> ubook::Result<()> {
     } else if !work_list.is_empty() {
         let mut table = Table::new();
         table.set_format(*prettytable::format::consts::FORMAT_NO_COLSEP);
-        table.set_titles(row![bc => "Type", "ID" , "Name", "Author", "Tags", "Popularity"]);
+        table.set_titles(
+            row![bc => "Backend", "Type", "ID" , "Name", "Author", "Tags", "Popularity"],
+        );
         for work in work_list {
             table.add_row(row![
+                cbFg -> host.backend_id(),
                 lb -> format!("{:?}", work.r#type).as_str(),
                 lb -> work.work_id.to_string().as_str(),
-                c -> work.work_name.as_str(),
-                c -> work.author_name.as_str(),
-                r -> work.tags.join(" ").as_str(),
-                r -> conv(work.popularity).as_str(),
+                cbFy -> work.work_name.as_str(),
+                cb -> work.author_name.as_str(),
+                rbFm -> work.tags.join(" ").as_str(),
+                rbiFr -> conv(work.popularity).as_str(),
             ]);
         }
         table.printstd();

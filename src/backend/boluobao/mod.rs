@@ -152,3 +152,9 @@ where
         _ => anyhow::bail!("{status_code}"),
     }
 }
+
+impl crate::Backend for BoluobaoHost {
+    fn backend_id(&self) -> &'static str {
+        "boluobao"
+    }
+}
