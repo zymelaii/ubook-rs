@@ -99,15 +99,19 @@ async fn handle_subcmd_search(args: cli::SearchArgs) -> ubook::Result<()> {
                 args.limit,
                 work_type,
                 Box::new(move |works: Vec<WorkSearchResult>| {
-                    list.lock().unwrap().extend(works);
+                    list.lock()
+                        .expect("mutex panicked unexpectedly")
+                        .extend(works);
                     true
                 }),
             )
             .await?;
     }
 
-    assert!(Arc::strong_count(&work_list) == 1);
-    let mut work_list = Arc::try_unwrap(work_list).unwrap().into_inner().unwrap();
+    let mut work_list = Arc::into_inner(work_list)
+        .expect("`work_list` is expected to be strongly held")
+        .into_inner()
+        .expect("mutex panicked unexpectedly");
     work_list.sort_by(|lhs, rhs| rhs.popularity.cmp(&lhs.popularity));
     if args.limit > 0 && work_list.len() > args.limit {
         work_list.drain(args.limit..);
