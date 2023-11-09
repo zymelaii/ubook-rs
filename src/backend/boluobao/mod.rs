@@ -10,7 +10,7 @@ pub use internal::*;
 use crate::share::*;
 use reqwest::{
     header::{HeaderMap, *},
-    IntoUrl, Method, StatusCode, {Client, RequestBuilder},
+    StatusCode,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -24,7 +24,6 @@ pub struct SessionInfo {
 
 #[derive(Debug)]
 pub struct BoluobaoHost {
-    client: Client,
     device_token: String,
     active_user: Option<Id>,
     sessions: HashMap<Id, SessionInfo>,
@@ -52,7 +51,6 @@ impl BoluobaoHost {
 impl Default for BoluobaoHost {
     fn default() -> Self {
         Self {
-            client: Default::default(),
             device_token: Uuid::new_v4().to_string().to_lowercase(),
             active_user: None,
             sessions: Default::default(),
@@ -73,55 +71,6 @@ impl BoluobaoHost {
         } else {
             None
         }
-    }
-
-    fn default_header(&self) -> crate::Result<HeaderMap> {
-        let app_version = "4.8.42(android;25)";
-        let channel = "HomePage";
-
-        let user_agent = format!("boluobao/{app_version}/{channel}/{}", self.device_token);
-        let security = get_sfsecurity(app_version, self.device_token.as_str());
-
-        let mut headers = HeaderMap::new();
-        headers.append(ACCEPT, "application/vnd.sfacg.api+json;version=1".parse()?);
-        headers.append(ACCEPT_CHARSET, "UTF-8".parse()?);
-        headers.append(AUTHORIZATION, consts::AUTH.parse()?);
-        headers.append(CONTENT_TYPE, "application/json".parse()?);
-        headers.append(USER_AGENT, user_agent.parse()?);
-        headers.append("SFSecurity", security.parse()?);
-
-        Ok(headers)
-    }
-
-    fn request<U: IntoUrl>(&self, method: Method, url: U) -> RequestBuilder {
-        let request = self
-            .client
-            .request(method, url)
-            .headers(self.default_header().unwrap_or_default());
-        if let Some(user_id) = self.active_user {
-            let SessionInfo { token, sid } =
-                self.sessions.get(&user_id).expect("broken session list");
-            let cookie = format!(".SFCommunity={token}; session_APP={sid}");
-            request.header(COOKIE, cookie)
-        } else {
-            request
-        }
-    }
-
-    pub fn get<U: IntoUrl>(&self, url: U) -> RequestBuilder {
-        self.request(Method::GET, url)
-    }
-
-    pub fn post<U: IntoUrl>(&self, url: U) -> RequestBuilder {
-        self.request(Method::POST, url)
-    }
-
-    pub fn api_get(&self, url: &str) -> RequestBuilder {
-        self.request(Method::GET, format!("{}{url}", consts::APIPREFIX))
-    }
-
-    pub fn api_post(&self, url: &str) -> RequestBuilder {
-        self.request(Method::POST, format!("{}{url}", consts::APIPREFIX))
     }
 }
 
@@ -150,6 +99,38 @@ where
             anyhow::bail!("{status_code} => {msg}");
         }
         _ => anyhow::bail!("{status_code}"),
+    }
+}
+
+impl crate::RequestBuilder for BoluobaoHost {
+    fn api_prefix(&self) -> &'static str {
+        consts::APIPREFIX
+    }
+
+    fn default_header(&self) -> crate::Result<HeaderMap> {
+        let app_version = "4.8.42(android;25)";
+        let channel = "HomePage";
+
+        let user_agent = format!("boluobao/{app_version}/{channel}/{}", self.device_token);
+        let security = get_sfsecurity(app_version, self.device_token.as_str());
+
+        let mut headers = HeaderMap::new();
+        headers.append(ACCEPT, "application/vnd.sfacg.api+json;version=1".parse()?);
+        headers.append(ACCEPT_CHARSET, "UTF-8".parse()?);
+        headers.append(AUTHORIZATION, consts::AUTH.parse()?);
+        headers.append(CONTENT_TYPE, "application/json".parse()?);
+        headers.append(USER_AGENT, user_agent.parse()?);
+        headers.append("SFSecurity", security.parse()?);
+
+        Ok(headers)
+    }
+
+    fn default_cookie(&self) -> crate::Result<String> {
+        Ok(self.active_user.map_or_else(Default::default, |user_id| {
+            let SessionInfo { token, sid } =
+                self.sessions.get(&user_id).expect("broken session list");
+            format!(".SFCommunity={token}; session_APP={sid}")
+        }))
     }
 }
 

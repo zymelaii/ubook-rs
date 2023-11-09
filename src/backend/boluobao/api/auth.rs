@@ -1,4 +1,5 @@
 use super::*;
+use crate::RequestBuilder;
 
 use async_trait::async_trait;
 use reqwest::{header::*, StatusCode};

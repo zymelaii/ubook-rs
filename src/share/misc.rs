@@ -3,7 +3,7 @@ use serde::Serialize;
 use super::*;
 
 /// 作品类型
-#[derive(Debug, Eq, PartialEq, Hash, Serialize)]
+#[derive(Debug, Eq, PartialEq, Hash, Serialize, Clone, Copy)]
 pub enum WorkType {
     /// 未知类型
     Unknown,
